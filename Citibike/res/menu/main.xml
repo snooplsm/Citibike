@@ -1,0 +1,19 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android" >
+
+    <item
+        android:id="@+id/action_settings"
+        android:orderInCategory="100"
+        android:showAsAction="never"
+        android:title="@string/action_settings"/>
+    <item
+        android:id="@+id/remove_fragment"
+        android:orderInCategory="100"
+        android:showAsAction="never"
+        android:title="remove fragment"/>
+    <item
+        android:id="@+id/add_fragment"
+        android:orderInCategory="100"
+        android:showAsAction="never"
+        android:title="add fragment"/>
+
+</menu>
