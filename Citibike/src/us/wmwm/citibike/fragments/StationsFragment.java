@@ -1,5 +1,7 @@
 package us.wmwm.citibike.fragments;
 
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.Future;
 
@@ -27,9 +29,9 @@ public class StationsFragment extends Fragment {
 	ListView list;
 
 	Handler handler = new Handler();
-	
+
 	StationAdapter adapter;
-	
+
 	LocationUtil locationUtil = LocationUtil.get();
 
 	@Override
@@ -41,38 +43,38 @@ public class StationsFragment extends Fragment {
 		list.setAdapter(adapter = new StationAdapter());
 		return root;
 	}
-	
+
 	private LocationUtilListener listener = new LocationUtilListener() {
-		
+
 		@Override
-		public FragmentActivity getActivity() {		
+		public FragmentActivity getActivity() {
 			return (FragmentActivity) StationsFragment.this.getActivity();
 		}
-		
+
 		@Override
 		public int onActivityRequestId() {
 			return 1000;
 		}
-		
+
 		@Override
-		public void onConnected(LocationUtil util) {			
+		public void onConnected(LocationUtil util) {
 		}
-		
+
 		@Override
-		public void onConnectionFailed(LocationUtil util) {			
+		public void onConnectionFailed(LocationUtil util) {
 		}
-		
+
 		@Override
 		public boolean shouldHandleResulution() {
 			return true;
 		}
-		
+
 	};
 
 	@Override
 	public void onActivityCreated(Bundle savedInstanceState) {
 		super.onActivityCreated(savedInstanceState);
-		locationUtil.onActivityCreated(listener,savedInstanceState);
+		locationUtil.onActivityCreated(listener, savedInstanceState);
 		loadData();
 	}
 
@@ -86,20 +88,52 @@ public class StationsFragment extends Fragment {
 					String stations = Streams.readFully(Streams
 							.getStream("stations.json"));
 					JSONObject obj = new JSONObject(stations);
-					final List<Station> parsedStations = Station.parseStations(obj);
-					System.out.println("There are " + parsedStations.size() + " stations.");
+					final List<Station> parsedStations = Station
+							.parseStations(obj);
+					System.out.println("There are " + parsedStations.size()
+							+ " stations.");
 					final Location location = locationUtil.getLastLocation();
-					System.out.println("Last Location: " + location.getLatitude() + " , " + location.getLongitude());
+					if (location != null) {
+						System.out.println("Last Location: "
+								+ location.getLatitude() + " , "
+								+ location.getLongitude());
+						final Station me = new Station() {
+							@Override
+							public double getLatitude() {
+								return location.getLatitude();
+							}
+
+							public double getLongitude() {
+								return location.getLongitude();
+							}
+						};
+						Comparator<Station> sort = new Comparator<Station>() {
+							float[] a = new float[1];
+							float[] b = new float[1];
+
+							@Override
+							public int compare(Station lhs, Station rhs) {
+								Location.distanceBetween(lhs.getLatitude(),
+										lhs.getLongitude(), me.getLatitude(),
+										me.getLongitude(), a);
+								Location.distanceBetween(rhs.getLatitude(),
+										rhs.getLongitude(), me.getLatitude(),
+										me.getLongitude(), b);
+								return Float.valueOf(a[0]).compareTo(b[0]);
+							}
+						};
+						Collections.sort(parsedStations, sort);
+					}
 					handler.post(new Runnable() {
 						@Override
 						public void run() {
 							adapter.setData(parsedStations);
 						}
-					});					
+					});
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
-				
+
 			}
 		});
 	}

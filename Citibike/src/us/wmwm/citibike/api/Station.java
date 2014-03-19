@@ -2,6 +2,7 @@ package us.wmwm.citibike.api;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -10,7 +11,9 @@ import java.util.TreeMap;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-public class Station implements Serializable {
+import android.location.Location;
+
+public class Station implements Serializable {	
 
 	private static final long serialVersionUID = 1L;
 
