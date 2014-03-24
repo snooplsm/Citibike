@@ -2,22 +2,27 @@ package us.wmwm.citibike.fragments;
 
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 import org.json.JSONObject;
 
 import us.wmwm.citibike.adapters.StationAdapter;
+import us.wmwm.citibike.api.Api;
+import us.wmwm.citibike.api.Api.StationsResponse;
 import us.wmwm.citibike.api.Station;
 import us.wmwm.citibike.util.LocationUtil;
 import us.wmwm.citibike.util.LocationUtil.LocationUtilListener;
 import us.wmwm.citibike.util.Streams;
 import us.wmwm.citibike.util.ThreadHelper;
 import us.wmwm.citibike2.R;
-import android.app.Fragment;
 import android.location.Location;
 import android.os.Bundle;
 import android.os.Handler;
+import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -67,6 +72,14 @@ public class StationsFragment extends Fragment {
 		@Override
 		public boolean shouldHandleResulution() {
 			return true;
+		}
+		
+		@Override
+		public void onBearingChanged(float magneticX, float magneticY,
+				float magneticZ) {
+			if(adapter!=null) {
+				adapter.updateBearing(magneticX,magneticY,magneticZ);
+			}
 		}
 
 	};
@@ -127,7 +140,8 @@ public class StationsFragment extends Fragment {
 					handler.post(new Runnable() {
 						@Override
 						public void run() {
-							adapter.setData(parsedStations);
+							adapter.setData(location, parsedStations);
+							updateStations();
 						}
 					});
 				} catch (Exception e) {
@@ -136,6 +150,64 @@ public class StationsFragment extends Fragment {
 
 			}
 		});
+	}
+	
+	
+
+	@Override
+	public void onPause() {
+		super.onPause();
+		locationUtil.onPause();
+		if(updateStationsFuture!=null) {
+			updateStationsFuture.cancel(true);
+		}
+	}
+
+
+
+	@Override
+	public void onResume() {
+		super.onResume();
+		locationUtil.onResume();
+		if(adapter!=null) {
+			updateStations();
+		}
+	}
+	
+	Future<?> updateStationsFuture;
+	
+	private void updateStations() {
+		if(updateStationsFuture!=null) {
+			updateStationsFuture.cancel(true);
+		}
+		updateStationsFuture = ThreadHelper.getScheduler().scheduleAtFixedRate(new Runnable() {
+			@Override
+			public void run() {
+				Api api = new Api();
+				final StationsResponse resp;
+				try {
+					resp = api.updateStations();
+				} catch (Exception e) {
+					//TODO: SHOW ERROR
+					return;
+				}
+				if(!resp.isSuccess()) {
+					
+				} else {
+					Map<String, Station> updatedStations = new HashMap<String,Station>();
+					for(Station s : resp.getStations()) {
+						updatedStations.put(s.getId(), s);
+					}
+					handler.post(new Runnable() {
+						@Override
+						public void run() {							
+							adapter.updateStations(resp.getStations());
+						}						
+					});
+					
+				}
+			}
+		}, 1, 60*1000, TimeUnit.MILLISECONDS);
 	}
 
 	@Override

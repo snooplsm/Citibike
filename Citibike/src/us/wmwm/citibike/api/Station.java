@@ -2,7 +2,6 @@ package us.wmwm.citibike.api;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -10,8 +9,6 @@ import java.util.TreeMap;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
-
-import android.location.Location;
 
 public class Station implements Serializable {	
 
@@ -47,8 +44,8 @@ public class Station implements Serializable {
 		longitude = o.optDouble("longitude");
 		label = o.optString("label");
 		address = o.optString("stationAddress");
-		availableBikes = o.optInt("availableBikes");
-		availableDocks = o.optInt("availableDocks");
+		availableBikes = o.optInt("availableBikes",Integer.MIN_VALUE);
+		availableDocks = o.optInt("availableDocks",Integer.MIN_VALUE);
 		JSONArray nearby = o.optJSONArray("nearbyStations");
 		if (nearby != null) {
 			for (int i = 0; i < nearby.length(); i++) {
@@ -69,6 +66,9 @@ public class Station implements Serializable {
 	 *            fully represented
 	 */
 	public void merge(Station full) {
+		if(full==null) {
+			return;
+		}
 		latitude = full.latitude;
 		longitude = full.longitude;
 		address = full.address;

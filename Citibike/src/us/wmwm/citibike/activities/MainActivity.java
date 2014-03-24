@@ -2,12 +2,12 @@ package us.wmwm.citibike.activities;
 
 import us.wmwm.citibike.fragments.StationsFragment;
 import us.wmwm.citibike2.R;
-import android.app.Fragment;
-import android.app.FragmentTransaction;
 import android.content.res.Configuration;
 import android.os.Bundle;
 import android.support.v4.app.ActionBarDrawerToggle;
+import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v4.widget.DrawerLayout;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -23,7 +23,7 @@ public class MainActivity extends FragmentActivity {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
 		drawer = (DrawerLayout) findViewById(R.id.drawer);
- 		FragmentTransaction t = getFragmentManager().beginTransaction();
+ 		FragmentTransaction t = getSupportFragmentManager().beginTransaction();
 		t.replace(R.id.content_fragment, StationsFragment.newInstance());
 		t.commit();
 		toggle = new ActionBarDrawerToggle(this, drawer, R.drawable.ic_navigation_drawer, R.string.open, R.string.close);
@@ -52,15 +52,15 @@ public class MainActivity extends FragmentActivity {
 		}
 		if(item.getItemId()==R.id.remove_fragment) {
 			
-			Fragment fragment = getFragmentManager().findFragmentById(R.id.content_fragment);
+			Fragment fragment = getSupportFragmentManager().findFragmentById(R.id.content_fragment);
 			if(fragment!=null) {
-				FragmentTransaction t = getFragmentManager().beginTransaction();
+				FragmentTransaction t = getSupportFragmentManager().beginTransaction();
 				t.remove(fragment);
 				t.commit();
 			}
 		}
 		if(item.getItemId()==R.id.add_fragment) {
-			FragmentTransaction t = getFragmentManager().beginTransaction();
+			FragmentTransaction t = getSupportFragmentManager().beginTransaction();
 			t.replace(R.id.content_fragment, StationsFragment.newInstance());
 			t.commit();
 		}

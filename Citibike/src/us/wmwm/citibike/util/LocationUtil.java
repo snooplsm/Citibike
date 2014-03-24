@@ -6,8 +6,13 @@ import java.util.Set;
 import us.wmwm.citibike.CitibikeApplication;
 import android.app.Activity;
 import android.app.Dialog;
+import android.content.Context;
 import android.content.Intent;
 import android.content.IntentSender;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener2;
+import android.hardware.SensorManager;
 import android.location.Location;
 import android.os.Bundle;
 import android.support.v4.app.DialogFragment;
@@ -37,7 +42,8 @@ public class LocationUtil {
 		void onConnected(LocationUtil util);
 		boolean shouldHandleResulution();
 		int onActivityRequestId();
-		FragmentActivity getActivity();		
+		FragmentActivity getActivity();
+		void onBearingChanged(float magneticX, float magneticY, float magneticZ);		
 	}
 	
 	private void addListener(LocationUtilListener listener) {
@@ -83,6 +89,8 @@ public class LocationUtil {
 	};
 	
 	LocationClient locationClient = new LocationClient(CitibikeApplication.get(),callbacks,onFailed);
+	
+	Sensor compass;
 	
 	private void onConnectionFailed() {
 		for(LocationUtilListener listener : listeners) {
@@ -170,6 +178,51 @@ public class LocationUtil {
 			locationClient.connect();
 		}
 	}	
+	
+	public void onPause() {
+		if(compass!=null) {
+			SensorManager manager = (SensorManager) CitibikeApplication.get().getSystemService(Context.SENSOR_SERVICE);
+			if(manager!=null) {
+				compass = manager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
+				if(compass!=null) {
+					manager.unregisterListener(compassListener,compass);
+				}
+			}
+		}
+	}
+	
+	public void onResume() {
+		SensorManager manager = (SensorManager) CitibikeApplication.get().getSystemService(Context.SENSOR_SERVICE);
+		if(manager!=null) {
+			compass = manager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
+			if(compass!=null) {
+				manager.registerListener(compassListener, compass, SensorManager.SENSOR_DELAY_NORMAL);
+			}
+		}
+	}
+	
+	SensorEventListener2 compassListener = new SensorEventListener2() {
+
+		@Override
+		public void onAccuracyChanged(Sensor sensor, int accuracy) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public void onSensorChanged(SensorEvent event) {
+			for(LocationUtilListener listener : listeners) {
+				listener.onBearingChanged(event.values[0],event.values[1],event.values[2]);
+			}
+		}
+
+		@Override
+		public void onFlushCompleted(Sensor sensor) {
+			// TODO Auto-generated method stub
+			
+		}
+		
+	};
 	
 	public void onDestroy(LocationUtilListener listener) {
 		removeListener(listener);

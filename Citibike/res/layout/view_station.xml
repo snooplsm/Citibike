@@ -10,8 +10,24 @@
         android:layout_height="wrap_content"
         android:layout_centerVertical="true"
         android:layout_marginLeft="12dp"
+        android:layout_toLeftOf="@+id/distance"
         android:text="9th ave and 16th st"
         android:textColor="@android:color/black"
         android:textSize="18sp" />
+
+    <TextView
+        android:id="@id/distance"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentRight="true"
+        android:layout_marginRight="12dp" />
+
+    <TextView
+        android:id="@+id/available"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentRight="true"
+        android:layout_below="@id/name"
+        android:layout_marginRight="12dp" />
 
 </RelativeLayout>
