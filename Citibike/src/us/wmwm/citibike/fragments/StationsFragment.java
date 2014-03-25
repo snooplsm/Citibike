@@ -184,6 +184,11 @@ public class StationsFragment extends Fragment {
 			@Override
 			public void run() {
 				Api api = new Api();
+				try {
+					api.login("snooplsm","Homer299");
+				} catch (Exception e) {
+					
+				}
 				final StationsResponse resp;
 				try {
 					resp = api.updateStations();

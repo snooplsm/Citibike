@@ -1,6 +1,4 @@
-Citibike/bin
-Citibike/gen
-libraries/google-play-services_lib/bin
-libraries/google-play-services_lib/gen
-libraries/appcompat/gen
-libraries/appcompat/bin
+bin
+gen
+class
+\.DS_Store

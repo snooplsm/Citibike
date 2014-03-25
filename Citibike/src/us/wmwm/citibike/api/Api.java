@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.util.Collections;
@@ -13,6 +14,9 @@ import java.util.List;
 import java.util.Map;
 
 import org.json.JSONObject;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.select.Elements;
 
 import us.wmwm.citibike.util.Streams;
 import android.net.Uri;
@@ -45,6 +49,12 @@ public class Api {
 			return stations;
 		}
 	}
+	
+	public class LoginResponse {
+		boolean success;
+		
+		public LoginResponse() {}
+	}
 
 	private HttpURLConnection get(Map<String, String> map,
 			Map<String, String> map2, String format) {
@@ -68,6 +78,19 @@ public class Api {
 
 	public StationsResponse updateStations() {
 		return new StationsResponse(consumeJsonObject(post(map(), map(), UPDATE)));
+	}
+	
+	public LoginResponse login(String username, String password) throws MalformedURLException, IOException {
+		HttpURLConnection conn = get(map(),map(),"https://citibikenyc.com/login");
+		String data = Streams.readFully(conn.getInputStream());
+		Document document = Jsoup.parse(data);
+		Elements el = document.select("[name=ci_csrf_token]");
+		Map<String,String> params = map("subsriberUsername",username,
+				"subscriberPassword",password,
+				"ci_csrf_token",el.attr("value"));
+		HttpURLConnection resp = post(params,map("Cookie",conn.getHeaderField("Set-Cookie")),"https://citibikenyc.com/login");
+		//Map<String,String> cookies = resp.getHeaderFields();
+		return null;
 	}
 	
 	JSONObject consumeJsonObject(HttpURLConnection conn) {
