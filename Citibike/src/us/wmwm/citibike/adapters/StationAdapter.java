@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.Map;
 
 import us.wmwm.citibike.api.Station;
-import us.wmwm.citibike.util.ImageLoader;
 import us.wmwm.citibike.views.StationView;
 import android.location.Location;
 import android.view.View;
