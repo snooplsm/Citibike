@@ -67,6 +67,7 @@ public class LocationUtil {
 		public void onConnected(Bundle bundle) {
 			connectedBundle = bundle;
 			isConnected = true;
+			LocationUtil.this.onConnected();
 		}
 
 		@Override
@@ -110,6 +111,12 @@ public class LocationUtil {
 	                e.printStackTrace();
 	            }
 			}
+		}
+	}
+	
+	private void onConnected() {
+		for(LocationUtilListener listener : listeners) {
+			listener.onConnected(this);
 		}
 	}
 	
@@ -196,9 +203,10 @@ public class LocationUtil {
 		if(manager!=null) {
 			compass = manager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
 			if(compass!=null) {
-				manager.registerListener(compassListener, compass, SensorManager.SENSOR_DELAY_NORMAL);
+				//manager.registerListener(compassListener, compass, SensorManager.SENSOR_DELAY_NORMAL);
 			}
 		}
+		
 	}
 	
 	SensorEventListener2 compassListener = new SensorEventListener2() {

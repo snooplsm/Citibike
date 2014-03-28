@@ -10,14 +10,15 @@ import java.util.TreeMap;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import com.google.android.gms.maps.model.LatLng;
+
 public class Station implements Serializable {	
 
 	private static final long serialVersionUID = 1L;
 
 	String id;
 	String status;
-	double latitude;
-	double longitude;
+	LatLng latLng;
 	String label;
 	String address;
 	int availableBikes;
@@ -40,8 +41,7 @@ public class Station implements Serializable {
 	public Station(JSONObject o) {
 		id = o.optString("id");
 		status = o.optString("status");
-		latitude = o.optDouble("latitude");
-		longitude = o.optDouble("longitude");
+		latLng = new LatLng(o.optDouble("latitude"), o.optDouble("longitude"));
 		label = o.optString("label");
 		address = o.optString("stationAddress");
 		availableBikes = o.optInt("availableBikes",Integer.MIN_VALUE);
@@ -69,8 +69,7 @@ public class Station implements Serializable {
 		if(full==null) {
 			return;
 		}
-		latitude = full.latitude;
-		longitude = full.longitude;
+		latLng = full.latLng;
 		address = full.address;
 		full.availableBikes = availableBikes;
 		full.availableDocks = availableDocks;
@@ -103,12 +102,8 @@ public class Station implements Serializable {
 		return label;
 	}
 	
-	public double getLatitude() {
-		return latitude;
-	}
-	
-	public double getLongitude() {
-		return longitude;
+	public LatLng getLatLng() {
+		return latLng;
 	}
 	
 	public Map<Double, Station> getNearbyStations() {

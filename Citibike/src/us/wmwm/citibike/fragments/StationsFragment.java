@@ -8,7 +8,7 @@ import java.util.Map;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
-import org.json.JSONObject;
+import com.google.android.gms.maps.model.LatLng;
 
 import us.wmwm.citibike.adapters.StationAdapter;
 import us.wmwm.citibike.api.Api;
@@ -16,28 +16,32 @@ import us.wmwm.citibike.api.Api.StationsResponse;
 import us.wmwm.citibike.api.Station;
 import us.wmwm.citibike.util.LocationUtil;
 import us.wmwm.citibike.util.LocationUtil.LocationUtilListener;
-import us.wmwm.citibike.util.Streams;
+import us.wmwm.citibike.util.StationUtil;
 import us.wmwm.citibike.util.ThreadHelper;
 import us.wmwm.citibike2.R;
 import android.location.Location;
 import android.os.Bundle;
 import android.os.Handler;
-import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AbsListView;
+import android.widget.AbsListView.OnScrollListener;
 import android.widget.ListView;
 
-public class StationsFragment extends Fragment {
+public class StationsFragment extends LocationAwareFragment {
 
 	ListView list;
 
 	Handler handler = new Handler();
 
 	StationAdapter adapter;
-
-	LocationUtil locationUtil = LocationUtil.get();
+	
+	@Override
+	public void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);		
+	}
 
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -48,6 +52,48 @@ public class StationsFragment extends Fragment {
 		list.setAdapter(adapter = new StationAdapter());
 		return root;
 	}
+	
+	@Override
+	public void onViewCreated(View view, Bundle savedInstanceState) {
+		super.onViewCreated(view, savedInstanceState);
+		list.setOnScrollListener(onScrollListener);
+		
+	}
+	
+	OnScrollListener onScrollListener = new OnScrollListener() {
+		
+		private int previousFirstVisibleItem = 0;
+	    private long previousEventTime = 0;
+	    private double speed = 0;
+
+	    @Override
+	    public void onScroll(AbsListView view, int firstVisibleItem,
+	            int visibleItemCount, int totalItemCount) {
+
+	        if (previousFirstVisibleItem != firstVisibleItem){
+	            long currTime = System.currentTimeMillis();
+	            long timeToScrollOneElement = currTime - previousEventTime;
+	            speed = ((double)1/timeToScrollOneElement)*1000;
+
+	            previousFirstVisibleItem = firstVisibleItem;
+	            previousEventTime = currTime;
+
+	            //Log.d("DBG", "Speed: " +speed + " elements/second");
+	        }
+
+	    }
+
+		
+		@Override
+		public void onScrollStateChanged(AbsListView view, int scrollState) {
+		
+			if (scrollState == AbsListView.OnScrollListener.SCROLL_STATE_FLING && speed>10.0) {
+	            ThreadHelper.getImagePool().pause();
+	        } else {
+	            ThreadHelper.getImagePool().resume();
+	        }
+		}
+	};
 
 	private LocationUtilListener listener = new LocationUtilListener() {
 
@@ -74,6 +120,7 @@ public class StationsFragment extends Fragment {
 			return true;
 		}
 		
+		
 		@Override
 		public void onBearingChanged(float magneticX, float magneticY,
 				float magneticZ) {
@@ -87,7 +134,6 @@ public class StationsFragment extends Fragment {
 	@Override
 	public void onActivityCreated(Bundle savedInstanceState) {
 		super.onActivityCreated(savedInstanceState);
-		locationUtil.onActivityCreated(listener, savedInstanceState);
 		loadData();
 	}
 
@@ -98,44 +144,13 @@ public class StationsFragment extends Fragment {
 			@Override
 			public void run() {
 				try {
-					String stations = Streams.readFully(Streams
-							.getStream("stations.json"));
-					JSONObject obj = new JSONObject(stations);
-					final List<Station> parsedStations = Station
-							.parseStations(obj);
-					System.out.println("There are " + parsedStations.size()
-							+ " stations.");
+					final List<Station> parsedStations = StationUtil.getStations();
 					final Location location = locationUtil.getLastLocation();
 					if (location != null) {
 						System.out.println("Last Location: "
 								+ location.getLatitude() + " , "
 								+ location.getLongitude());
-						final Station me = new Station() {
-							@Override
-							public double getLatitude() {
-								return location.getLatitude();
-							}
-
-							public double getLongitude() {
-								return location.getLongitude();
-							}
-						};
-						Comparator<Station> sort = new Comparator<Station>() {
-							float[] a = new float[1];
-							float[] b = new float[1];
-
-							@Override
-							public int compare(Station lhs, Station rhs) {
-								Location.distanceBetween(lhs.getLatitude(),
-										lhs.getLongitude(), me.getLatitude(),
-										me.getLongitude(), a);
-								Location.distanceBetween(rhs.getLatitude(),
-										rhs.getLongitude(), me.getLatitude(),
-										me.getLongitude(), b);
-								return Float.valueOf(a[0]).compareTo(b[0]);
-							}
-						};
-						Collections.sort(parsedStations, sort);
+						StationUtil.sort(parsedStations, location);
 					}
 					handler.post(new Runnable() {
 						@Override
@@ -157,7 +172,6 @@ public class StationsFragment extends Fragment {
 	@Override
 	public void onPause() {
 		super.onPause();
-		locationUtil.onPause();
 		if(updateStationsFuture!=null) {
 			updateStationsFuture.cancel(true);
 		}
@@ -168,7 +182,6 @@ public class StationsFragment extends Fragment {
 	@Override
 	public void onResume() {
 		super.onResume();
-		locationUtil.onResume();
 		if(adapter!=null) {
 			updateStations();
 		}
@@ -185,7 +198,6 @@ public class StationsFragment extends Fragment {
 			public void run() {
 				Api api = new Api();
 				try {
-					api.login("snooplsm","Homer299");
 				} catch (Exception e) {
 					
 				}
@@ -221,7 +233,6 @@ public class StationsFragment extends Fragment {
 		if (loadDataFuture != null) {
 			loadDataFuture.cancel(true);
 		}
-		locationUtil.onDestroy(listener);
 	}
 
 	public static StationsFragment newInstance() {

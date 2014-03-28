@@ -1,6 +1,7 @@
 package us.wmwm.citibike.activities;
 
 import us.wmwm.citibike.fragments.StationsFragment;
+import us.wmwm.citibike.fragments.StationsMapFragment;
 import us.wmwm.citibike2.R;
 import android.content.res.Configuration;
 import android.os.Bundle;
@@ -24,7 +25,7 @@ public class MainActivity extends FragmentActivity {
 		setContentView(R.layout.activity_main);
 		drawer = (DrawerLayout) findViewById(R.id.drawer);
  		FragmentTransaction t = getSupportFragmentManager().beginTransaction();
-		t.replace(R.id.content_fragment, StationsFragment.newInstance());
+		t.replace(R.id.content_fragment, new StationsMapFragment());
 		t.commit();
 		toggle = new ActionBarDrawerToggle(this, drawer, R.drawable.ic_navigation_drawer, R.string.open, R.string.close);
 		drawer.setDrawerListener(toggle);
