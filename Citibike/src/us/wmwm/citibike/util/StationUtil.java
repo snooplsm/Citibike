@@ -26,6 +26,25 @@ public class StationUtil {
 		}
 	}
 	
+	public static Comparator<LatLng> newStationComparator(final LatLng myLocation) {
+		return new Comparator<LatLng>() {
+			
+			float[] a = new float[1];
+			float[] b = new float[1];
+			
+			@Override
+			public int compare(LatLng lhs, LatLng rhs) {				
+				Location.distanceBetween(lhs.latitude,
+						lhs.longitude, myLocation.latitude,
+						myLocation.longitude, a);
+				Location.distanceBetween(rhs.latitude,
+						rhs.longitude, myLocation.latitude,
+						myLocation.longitude, b);
+				return Float.valueOf(a[0]).compareTo(Float.valueOf(b[0]));
+			}
+		};
+	}
+	
 	public static void sort(List<Station> stations, Location location) {
 		if(location==null) {
 			return;
